@@ -1,0 +1,92 @@
+Music in Motion Desktop Application
+
+Overview
+
+Introduction:  The purpose of this application is to provide a way for the user to become their own visual conductor.  By moving 
+their hands over the Leap motion sensor, each person is able to customize the output based on the library of shaders and associated
+attributes that are mapped.  
+
+The frontend application is programmed using PyQt.  The backend, which supports the Leap motion input and handles the subsequent
+changes in the shader, is handled using the Leap Motion SDK and the ModernGl python library.  
+
+The main screen on the desktop app is where the shader(s) is/are displayed it will continuously play as you choose mappings and
+get a feel for the motion sensor.  The list under the display contains the shader and the attributes that can be customized with
+specific mappings.  We tried to make this interface as dynamic and clean as possible, so all of the changes, including the addition and 
+removal of shaders, as well as loading previously defined mappings, should hopefully be intuitive, and will immediately be reflected
+in the display.
+If you are unsure what a good mapping might look like or create a good mapping you want to save, we also added presets and the ability
+to save and load values.  This uses pythons Pickle library and only takes a button to initiate and a pathway as input.  
+
+Future Outlook - recording the shader output as well as leap motion raw input.  Ability to control play multiple shader files at the
+same time in the display screen once recording implemented.  Music localized into app to make it easier to sync with movements.  Expanded
+library of shaders for increased potential for creativity.   
+
+
+HOW TO ADD A NEW SHADER:
+In order to render multiple shaders simultaneously, we build a string with a
+block of code that is appended to other strings, creating one shader with
+multiple effects. Due to this, there’s a lot of maintenance adding the suffix
+_SHADERNAME (but with the name of the shader) in order to avoid two shaders
+using the same variable or function name. However, following the steps below
+consistently will help guarantee there will be no problems with overlap.
+
+First, find a shader on GLSLsandbox or elsewhere. On GLSLsandbox, you can edit
+the code directly. Find a few constants in the code, or places to put new
+constants, that affect the shader’s output in a meaningful way. Experiment
+with the bounds of these constants to decide what the highest and lowest values
+you want the variables to reach. Write those down somewhere.
+
+Pick a nice name for the shader. Then, copy the template found at
+ShaderTemplate.py and copy it over into the /desktop-app/Shaders folder, naming
+the file [SHADERNAME].py. 
+
+Replace all instances of SHADERNAME in the template with your shader name. We
+assume you’ll want the resolutionX and resolutionY parameters, so we’ve
+already added those. Add your other parameters to the list in the params(self)
+method. All parameter names *must* end in _SHADERNAME. The value following the
+colon is the default value, for when that parameter is not being controlled by
+the user.
+
+Navigate to /desktop-app/SelectionMenu.py. Add a line to the shader_dict list,
+following the same format as the other items there:
+
+“SHADERNAME” : 
+[‘parameter1’, ‘parameter2’, ..., ‘parameterN’],
+
+The list represents the order the shaders will appear in the menu. As a loose
+convention, we’ve been ordering them alphabetically.
+
+Return to /Shaders/[SHADERNAME].py. Copy the code from the shader sandbox and
+place it inside the triple-quotes in the fragShader definition. It is not
+necessary to copy the declaration of uniform variables such as time, mouse, and
+resolution. 
+
+Rename the function main() as main_SHADERNAME(). If any #defined variable or
+function has a name that might plausibly also appear in another shader, do the
+same with those. Note that you’ll also have to rename any references to those
+variables or functions within the code. 
+
+For each parameter, enter the following code at the beginning of the string in
+the fragShader function, replacing “MIN” and “MAX” with the minimum and
+maximum values you decided for that parameter. The shader template has already
+done this for resolutions, and placed the x and y resolution into a vector2.
+
+uniform float parameterName_SHADERNAME;
+const vec2 parameterName_SHADERNAME_Range = vec2(MIN, MAX);
+float parameterName_SHADERNAME_Scaled = scale(parameterName_SHADERNAME, parameterName_SHADERNAME_Range);
+
+As all parameters live on a scale from 0 to 1, this code creates a new variable
+parameterName_SHADERNAME_Scaled that has the correct value, mapped linearly from
+[0, 1] onto the range you’ve defined. 
+
+Replace or insert uses of these Scaled variables into the code. For
+example, replace instances of resolution with resolution_SHADERNAME_Scaled. 
+
+At the end of the code in main(), there should be a line assigning a value to
+a variable called fragColor, or something similar (it varies). Replace this with
+the following:
+
+color_SHADERNAME = [whatever the variable was being set to before. Usually something like vec4(col, .1)];
+color_SHADERNAME += frag_color_SHADERNAME;
+
+At this point, you should be done. Test it out.

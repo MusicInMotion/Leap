@@ -1,0 +1,7 @@
+64 bit Python 3? 
+
+pip install:
+numpy
+moderngl
+PyQt5
+pyautogui
